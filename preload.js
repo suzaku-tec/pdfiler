@@ -1,12 +1,24 @@
-// All of the Node.js APIs are available in the preload process.
-// It has the same sandbox as a Chrome extension.
-window.addEventListener('DOMContentLoaded', () => {
-  const replaceText = (selector, text) => {
-    const element = document.getElementById(selector)
-    if (element) element.innerText = text
-  }
+const PDFJS = require("pdfjs-dist");
 
-  for (const type of ['chrome', 'node', 'electron']) {
-    replaceText(`${type}-version`, process.versions[type])
-  }
-})
+PDFJS.GlobalWorkerOptions.workerSrc =
+  "node_modules/pdfjs-dist/build/pdf.worker.js";
+
+PDFJS.getDocument("test.pdf").then(function(pdf) {
+  pdf.getPage(1).then(function(page) {
+    var scale = 1.5;
+    var rotate = 0;
+    var viewport = page.getViewport(scale, rotate);
+    var canvas = document.createElement("canvas");
+    var ctx = canvas.getContext("2d");
+    var renderContext = {
+      canvasContext: ctx,
+      viewport: viewport
+    };
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+
+    document.getElementById("pdf-container").appendChild(canvas);
+
+    page.render(renderContext);
+  });
+});
